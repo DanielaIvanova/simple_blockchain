@@ -1,5 +1,4 @@
 defmodule Blockchain.Miner.Worker do
-
   alias Blockchain.Structures.SignedTx
   alias Blockchain.Structures.Block
   alias Blockchain.Structures.Header
@@ -56,6 +55,7 @@ defmodule Blockchain.Miner.Worker do
     previous_block_hash = Chain.last_block() |> Serialization.hash()
     difficulty_target = 2
     nonce = 3
+
     candidate_header = %Header{
       previous_hash: previous_block_hash,
       difficulty_target: difficulty_target,
@@ -72,7 +72,7 @@ defmodule Blockchain.Miner.Worker do
         end
       end)
 
-    pub_key = Key.get_public_key
+    pub_key = Key.get_public_key()
 
     txs =
       if valid_txs_list == [] do
@@ -88,5 +88,4 @@ defmodule Blockchain.Miner.Worker do
     data = %Transaction{from_acc: nil, to_acc: to_acc, amount: @coinbase_value}
     %SignedTx{data: data, signature: nil}
   end
-
 end
