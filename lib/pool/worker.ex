@@ -2,6 +2,7 @@ defmodule Blockchain.Pool.Worker do
   use GenServer
 
   # Client API
+
   def start_link(_ar) do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
@@ -14,7 +15,12 @@ defmodule Blockchain.Pool.Worker do
     GenServer.call(__MODULE__, :check)
   end
 
-  # Server callback
+  def take_and_remove_all_tx() do
+    GenServer.call(__MODULE__, :take_and_remove_all_tx)
+  end
+
+  # Server callbacks
+
   def handle_call({:add_tx, tx}, _from, pool) do
     {:ok, sign_tx} = tx
     new_pool = pool ++ [sign_tx]
@@ -23,5 +29,9 @@ defmodule Blockchain.Pool.Worker do
 
   def handle_call(:check, _from, pool) do
     {:reply, pool, pool}
+  end
+
+  def handle_call(:take_and_remove_all_tx, _form, pool) do
+    {:reply, pool, []}
   end
 end

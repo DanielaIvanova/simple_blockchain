@@ -1,12 +1,12 @@
 defmodule Blockchain.Chain.Worker do
-  use GenServer
 
   alias Blockchain.Structures.Block
   alias Blockchain.Structures.Header
-  alias Blockchain.Pool.Worker, as: Pool
-  alias Blockchain.Utilities.Serialization
+
+  use GenServer
 
   # Client API
+
   def start_link(_arg) do
     GenServer.start(__MODULE__, :ok, name: __MODULE__)
   end
@@ -23,10 +23,10 @@ defmodule Blockchain.Chain.Worker do
     GenServer.call(__MODULE__, :last)
   end
 
+  # Server callbacks
+
   def init(:ok) do
-    hardcoded_header = %Header{previous_hash: <<0::256>>,
-                               difficulty_target: 1,
-                               nonce: 0}
+    hardcoded_header = %Header{previous_hash: <<0::256>>, difficulty_target: 1, nonce: 0}
     herdcoded_tx_list = []
     hardcoded_block = %Block{header: hardcoded_header, txs: herdcoded_tx_list}
     state = [hardcoded_block]
@@ -45,20 +45,5 @@ defmodule Blockchain.Chain.Worker do
   def handle_call(:last, _from, state) do
     {:reply, List.last(state), state}
   end
-
-  def candidate_block() do
-    previous_block_hash = Serialization.hash(last_block())
-    difficulty_target = 2
-    # nonce
-    candidate_header = %Header{previous_hash: previous_block_hash,
-                               difficulty_target: difficulty_target,
-                               nonce: 3}
-    IO.puts "-- candidate_header---"
-    IO.inspect candidate_header
-    IO.puts "-- candidate_header---"
-    candidate_txs_list = Pool.check_pool
-
-  end
-
 
 end

@@ -1,4 +1,4 @@
-defmodule Blockchain.Pool.Worker.Supervisor do
+defmodule Blockchain.Miner.Worker.Supervisor do
   use Supervisor
 
   def start_link(_arg) do
@@ -7,7 +7,7 @@ defmodule Blockchain.Pool.Worker.Supervisor do
 
   def init(:ok) do
     children = [
-      Blockchain.Pool.Worker
+      Blockchain.Miner.Worker
     ]
 
     Supervisor.init(children, strategy: :one_for_one)
