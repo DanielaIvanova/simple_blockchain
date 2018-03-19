@@ -1,11 +1,11 @@
 defmodule Blockchain.Chain.ChainState do
-
   def get_chain_state(block_state, chain_state) do
     Map.merge(block_state, chain_state, fn _key, v1, v2 ->
       v1 + v2
     end)
   end
 
+  @spec get_block_state(list()) :: list()
   def get_block_state(txs) do
     state = %{}
 
@@ -17,6 +17,7 @@ defmodule Blockchain.Chain.ChainState do
           else
             state
           end
+
         update_block_state(update, tx.data.to_acc, tx.data.amount)
       end
 

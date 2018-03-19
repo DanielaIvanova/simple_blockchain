@@ -9,6 +9,7 @@ defmodule Blockchain.Keys.Key do
   end
 
   def get_public_key() do
-    create_private_key() |> create_public_key()
+    {pub_key, _priv_key} = create_private_key() |> create_public_key()
+    pub_key
   end
 end

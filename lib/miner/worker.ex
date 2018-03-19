@@ -52,16 +52,6 @@ defmodule Blockchain.Miner.Worker do
   end
 
   def candidate_block() do
-    previous_block_hash = Chain.last_block() |> Serialization.hash()
-    difficulty_target = 2
-    nonce = 3
-
-    candidate_header = %Header{
-      previous_hash: previous_block_hash,
-      difficulty_target: difficulty_target,
-      nonce: nonce
-    }
-
     candidate_txs_list = Pool.take_and_remove_all_tx()
 
     valid_txs_list =
@@ -72,6 +62,8 @@ defmodule Blockchain.Miner.Worker do
         end
       end)
 
+    merkle_tree_hash = Chain.merkle_tree_hash(valid_txs_list)
+
     pub_key = Key.get_public_key()
 
     txs =
@@ -80,6 +72,18 @@ defmodule Blockchain.Miner.Worker do
       else
         valid_txs_list
       end
+
+    previous_block_hash = Chain.last_block() |> Serialization.hash()
+    difficulty_target = 2
+    txs_root_hash = merkle_tree_hash
+    nonce = 3
+
+    candidate_header = %Header{
+      previous_hash: previous_block_hash,
+      difficulty_target: difficulty_target,
+      txs_root_hash: txs_root_hash,
+      nonce: nonce
+    }
 
     Block.create(candidate_header, txs)
   end

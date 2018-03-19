@@ -2,6 +2,7 @@ defmodule Blockchain.Chain.Worker do
   alias Blockchain.Structures.Block
   alias Blockchain.Structures.Header
   alias Blockchain.Chain.ChainState
+  alias Blockchain.Keys.Key
 
   use GenServer
 
@@ -23,15 +24,18 @@ defmodule Blockchain.Chain.Worker do
     GenServer.call(__MODULE__, :last)
   end
 
+  def get_balance(pub_key) do
+    GenServer.call(__MODULE__, {:get_balance, pub_key})
+  end
+
   # Server callbacks
 
   def init(:ok) do
-    hardcoded_header =
-      %Header{previous_hash: <<0::256>>, difficulty_target: 1, nonce: 0}
+    hardcoded_header = %Header{previous_hash: <<0::256>>, difficulty_target: 1, nonce: 0}
     herdcoded_tx_list = []
     hardcoded_block = %Block{header: hardcoded_header, txs: herdcoded_tx_list}
     blocks_list = [hardcoded_block]
-    chain_state = %{}
+    chain_state = %{Key.get_public_key() => 0}
     {:ok, %{blocks: blocks_list, chain_state: chain_state}}
   end
 
@@ -40,17 +44,37 @@ defmodule Blockchain.Chain.Worker do
   end
 
   def handle_call({:add, block}, _from, state) do
-    new_block_state =
-      ChainState.get_block_state(block.txs)
-    new_chain_state =
-      ChainState.get_chain_state(new_block_state, state.chain_state)
-    new_block_list =
-      state.blocks ++ [block]
+    new_block_state = ChainState.get_block_state(block.txs)
+    new_chain_state = ChainState.get_chain_state(new_block_state, state.chain_state)
+    new_block_list = state.blocks ++ [block]
     {:reply, :ok, %{state | blocks: new_block_list, chain_state: new_chain_state}}
   end
 
   def handle_call(:last, _from, state) do
     blocks_list = state.blocks
     {:reply, List.last(blocks_list), state}
+  end
+
+  def handle_call({:get_balance, pub_key}, _from, state) do
+    balance = state.chain_state[pub_key]
+    {:reply, balance, state}
+  end
+
+  def merkle_tree_hash(txs) do
+    if Enum.empty?(txs) == nil do
+      <<0::256>>
+    else
+      tree =
+        for tx <- txs do
+          tx_bin = :erlang.term_to_binary(tx)
+          {:crypto.hash(:sha256, tx_bin), tx_bin}
+        end
+
+      tree
+      |> List.foldl(:gb_merkle_trees.empty(), fn node, tree ->
+        :gb_merkle_trees.enter(elem(node, 0), elem(node, 1), tree)
+      end)
+    end
+    |> :gb_merkle_trees.root_hash()
   end
 end
