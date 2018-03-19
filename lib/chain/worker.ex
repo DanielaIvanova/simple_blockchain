@@ -31,7 +31,13 @@ defmodule Blockchain.Chain.Worker do
   # Server callbacks
 
   def init(:ok) do
-    hardcoded_header = %Header{previous_hash: <<0::256>>, difficulty_target: 1, nonce: 0}
+    hardcoded_header = %Header{
+      previous_hash: <<0::256>>,
+      difficulty_target: 1,
+      txs_root_hash: <<0::256>>,
+      nonce: 0
+    }
+
     herdcoded_tx_list = []
     hardcoded_block = %Block{header: hardcoded_header, txs: herdcoded_tx_list}
     blocks_list = [hardcoded_block]

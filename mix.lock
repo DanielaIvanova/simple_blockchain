@@ -1,0 +1,3 @@
+%{
+  "gb_merkle_trees": {:git, "https://github.com/aeternity/gb_merkle_trees.git", "4db7aad81944e2d12981a2ecd23dd59e32ab1651", [ref: "4db7aad"]},
+}
