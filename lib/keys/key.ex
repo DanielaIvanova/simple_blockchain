@@ -5,11 +5,12 @@ defmodule Blockchain.Keys.Key do
   end
 
   def create_public_key(private_key) do
-    :crypto.generate_key(:ecdh, :secp256k1, private_key)
-  end
-
-  def get_public_key() do
-    {pub_key, _priv_key} = create_private_key() |> create_public_key()
+    {pub_key, _priv_key} = :crypto.generate_key(:ecdh, :secp256k1, private_key)
     pub_key
   end
+
+  # def get_public_key() do
+  #   {pub_key, _priv_key} = create_private_key() |> create_public_key()
+  #   pub_key
+  # end
 end

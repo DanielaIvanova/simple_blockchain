@@ -22,8 +22,7 @@ defmodule Blockchain.Pool.Worker do
   # Server callbacks
 
   def handle_call({:add_tx, tx}, _from, pool) do
-    {:ok, sign_tx} = tx
-    new_pool = pool ++ [sign_tx]
+    new_pool = pool ++ [tx]
     {:reply, :ok, new_pool}
   end
 

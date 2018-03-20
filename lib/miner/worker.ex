@@ -4,15 +4,14 @@ defmodule Blockchain.Miner.Worker do
   alias Blockchain.Structures.Header
   alias Blockchain.Structures.Header
   alias Blockchain.Utilities.Serialization
-  alias Blockchain.Structures.Transaction
-  alias Blockchain.Keys.Key
   alias Blockchain.Verify.Tx
   alias Blockchain.Pool.Worker, as: Pool
   alias Blockchain.Chain.Worker, as: Chain
+  alias Blockchain.Keys.Mock
 
   use GenServer
 
-  @coinbase_value 100
+  @limit_diff_target_zeroes <<0::256>>
 
   # Client API
 
@@ -39,12 +38,20 @@ defmodule Blockchain.Miner.Worker do
 
   # Server callbacks
 
-  def handle_call(:start, _from, state) do
+  def handle_call(:start, _from, %{miner: :stop} = state) do
     {:reply, :ok, %{state | miner: :working}}
   end
 
-  def handle_call(:stop, _from, state) do
+  def handle_call(:start, _from, %{miner: :working} = state) do
+    {:reply, {:error, "Already working!"}, state}
+  end
+
+  def handle_call(:stop, _from, %{miner: :working} = state) do
     {:reply, :ok, %{state | miner: :stop}}
+  end
+
+  def handle_call(:stop, _from, %{miner: :stop} = state) do
+    {:reply, {:error, "Already stopped"}, state}
   end
 
   def handle_call(:check, _from, state) do
@@ -64,11 +71,11 @@ defmodule Blockchain.Miner.Worker do
 
     merkle_tree_hash = Chain.merkle_tree_hash(valid_txs_list)
 
-    pub_key = Key.get_public_key()
+    pub_key_miner = Mock.pub_key_miner()
 
     txs =
       if valid_txs_list == [] do
-        [coinbase_tx(pub_key)]
+        [SignedTx.coinbase_tx(pub_key_miner)]
       else
         valid_txs_list
       end
@@ -76,7 +83,7 @@ defmodule Blockchain.Miner.Worker do
     previous_block_hash = Chain.last_block() |> Serialization.hash()
     difficulty_target = 2
     txs_root_hash = merkle_tree_hash
-    nonce = 3
+    nonce = 1
 
     candidate_header = %Header{
       previous_hash: previous_block_hash,
@@ -85,11 +92,21 @@ defmodule Blockchain.Miner.Worker do
       nonce: nonce
     }
 
-    Block.create(candidate_header, txs)
+    header = proof(candidate_header)
+    Block.create(header, txs) |> Chain.add_block()
   end
 
-  defp coinbase_tx(to_acc) do
-    data = %Transaction{from_acc: nil, to_acc: to_acc, amount: @coinbase_value}
-    %SignedTx{data: data, signature: nil}
+  def proof(header) do
+    hash_header = Serialization.hash(header)
+    difficulty_target = header.difficulty_target
+    <<max_zeroes::binary-size(difficulty_target), _::binary>> = @limit_diff_target_zeroes
+    <<head::binary-size(difficulty_target), _::binary>> = hash_header
+
+    if max_zeroes == head do
+      header
+    else
+      new_header = %{header | nonce: header.nonce + 1}
+      proof(new_header)
+    end
   end
 end

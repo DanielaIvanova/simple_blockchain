@@ -19,4 +19,9 @@ defmodule Blockchain.Structures.Header do
       nonce: nonce
     }
   end
+
+  @spec genesis_header() :: Header.t()
+  def genesis_header() do
+    %Header{previous_hash: <<0::256>>, difficulty_target: 1, txs_root_hash: <<0::256>>, nonce: 0}
+  end
 end
