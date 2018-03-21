@@ -1,10 +1,13 @@
 defmodule Blockchain.Pool.Worker do
+  @moduledoc """
+  Worker with transactions in the pool
+  """
   use GenServer
 
   # Client API
 
   def start_link(_ar) do
-    GenServer.start_link(__MODULE__, [], name: __MODULE__)
+    GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
   end
 
   def add_tx(tx) do
@@ -20,6 +23,10 @@ defmodule Blockchain.Pool.Worker do
   end
 
   # Server callbacks
+
+  def init(:ok) do
+    {:ok, []}
+  end
 
   def handle_call({:add_tx, tx}, _from, pool) do
     new_pool = pool ++ [tx]

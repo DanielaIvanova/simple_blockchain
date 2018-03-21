@@ -1,4 +1,7 @@
 defmodule Blockchain.Structures.Block do
+  @moduledoc """
+  Building Block structures
+  """
   alias Blockchain.Structures.Block
   alias Blockchain.Structures.Header
 

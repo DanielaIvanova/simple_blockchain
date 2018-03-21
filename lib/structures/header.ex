@@ -1,4 +1,7 @@
 defmodule Blockchain.Structures.Header do
+  @moduledoc """
+  Building header structures
+  """
   alias Blockchain.Structures.Header
 
   defstruct [:previous_hash, :difficulty_target, :txs_root_hash, :nonce]

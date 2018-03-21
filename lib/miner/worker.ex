@@ -1,4 +1,7 @@
 defmodule Blockchain.Miner.Worker do
+  @moduledoc """
+  Worker with mining process
+  """
   alias Blockchain.Structures.SignedTx
   alias Blockchain.Structures.Block
   alias Blockchain.Structures.Header
@@ -23,23 +26,39 @@ defmodule Blockchain.Miner.Worker do
     GenServer.call(__MODULE__, :start)
   end
 
+  def get_state() do
+    GenServer.call(__MODULE__, :check)
+  end
+
+  def mine_one_block() do
+    candidate_block() |> Chain.add_block()
+  end
+
   def stop() do
     GenServer.call(__MODULE__, :stop)
   end
 
-  def check() do
-    GenServer.call(__MODULE__, :check)
-  end
+  # Server callbacks
 
   def init(:ok) do
-    state = %{miner: :stop, nonce: 0, block_candidate: nil}
+    state = %{miner: :stop, should_stop: false}
     {:ok, state}
   end
 
-  # Server callbacks
+  def handle_info(:work, state) do
+    mine_one_block()
+
+    case state.should_stop do
+      true -> nil
+      false -> schedule_work()
+    end
+
+    {:noreply, state}
+  end
 
   def handle_call(:start, _from, %{miner: :stop} = state) do
-    {:reply, :ok, %{state | miner: :working}}
+    schedule_work()
+    {:reply, :ok, %{state | miner: :working, should_stop: false}}
   end
 
   def handle_call(:start, _from, %{miner: :working} = state) do
@@ -47,7 +66,7 @@ defmodule Blockchain.Miner.Worker do
   end
 
   def handle_call(:stop, _from, %{miner: :working} = state) do
-    {:reply, :ok, %{state | miner: :stop}}
+    {:reply, :ok, %{state | miner: :stop, should_stop: true}}
   end
 
   def handle_call(:stop, _from, %{miner: :stop} = state) do
@@ -69,16 +88,14 @@ defmodule Blockchain.Miner.Worker do
         end
       end)
 
-    merkle_tree_hash = Chain.merkle_tree_hash(valid_txs_list)
-
-    pub_key_miner = Mock.pub_key_miner()
-
     txs =
       if valid_txs_list == [] do
-        [SignedTx.coinbase_tx(pub_key_miner)]
+        [Mock.pub_key_miner() |> SignedTx.coinbase_tx()]
       else
         valid_txs_list
       end
+
+    merkle_tree_hash = Chain.merkle_tree_hash(txs)
 
     previous_block_hash = Chain.last_block() |> Serialization.hash()
     difficulty_target = 2
@@ -93,10 +110,11 @@ defmodule Blockchain.Miner.Worker do
     }
 
     header = proof(candidate_header)
-    Block.create(header, txs) |> Chain.add_block()
+    Block.create(header, txs)
   end
 
-  def proof(header) do
+  @spec proof(Header.t()) :: Header.t()
+  defp proof(header) do
     hash_header = Serialization.hash(header)
     difficulty_target = header.difficulty_target
     <<max_zeroes::binary-size(difficulty_target), _::binary>> = @limit_diff_target_zeroes
@@ -108,5 +126,9 @@ defmodule Blockchain.Miner.Worker do
       new_header = %{header | nonce: header.nonce + 1}
       proof(new_header)
     end
+  end
+
+  defp schedule_work() do
+    Process.send_after(self(), :work, 3000)
   end
 end

@@ -5,7 +5,7 @@ defmodule Blockchain.Chain.ChainState do
     end)
   end
 
-  @spec get_block_state(list()) :: list()
+  @spec get_block_state(list()) :: map()
   def get_block_state(txs) do
     state = %{}
 
@@ -13,12 +13,12 @@ defmodule Blockchain.Chain.ChainState do
       for tx <- txs do
         update =
           if tx.data.from_acc != nil do
-            update_block_state(state, tx.data.from_acc, -tx.data.amount)
+            update_account_money(state, tx.data.from_acc, -tx.data.amount)
           else
             state
           end
 
-        update_block_state(update, tx.data.to_acc, tx.data.amount)
+        update_account_money(update, tx.data.to_acc, tx.data.amount)
       end
 
     List.foldl(new_state, %{}, fn n, acc ->
@@ -28,7 +28,8 @@ defmodule Blockchain.Chain.ChainState do
     end)
   end
 
-  def update_block_state(state, acc, amount) do
+  @spec update_account_money(map(), binary(), integer()) :: map()
+  def update_account_money(state, acc, amount) do
     if Map.has_key?(state, acc) == false do
       Map.put(state, acc, amount)
     else

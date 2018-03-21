@@ -1,4 +1,7 @@
 defmodule Blockchain.Structures.SignedTx do
+  @moduledoc """
+  Building signatures transactions
+  """
   alias Blockchain.Structures.Transaction
   alias Blockchain.Structures.SignedTx
   alias Blockchain.Utilities.Serialization

@@ -1,4 +1,7 @@
 defmodule Blockchain.Keys.Mock do
+  @moduledoc """
+  Hardcoded keys to work with Simple blockchain
+  """
   alias Blockchain.Keys.Key
 
   @miner_private_key <<106, 137, 34, 241, 153, 153, 143, 101, 35, 80, 168, 30, 13, 201, 102, 94>>

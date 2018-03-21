@@ -1,4 +1,7 @@
 defmodule Blockchain.Structures.Transaction do
+  @moduledoc """
+  Building transaction structures
+  """
   alias Blockchain.Structures.Transaction
 
   defstruct [:from_acc, :to_acc, :amount]

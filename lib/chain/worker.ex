@@ -1,8 +1,9 @@
 defmodule Blockchain.Chain.Worker do
+  @moduledoc """
+  Worker with blocks in the chain and accounts with their tokens
+  """
   alias Blockchain.Structures.Block
-  alias Blockchain.Structures.Header
   alias Blockchain.Chain.ChainState
-  alias Blockchain.Miner.Worker, as: Miner
 
   use GenServer
 
@@ -37,7 +38,9 @@ defmodule Blockchain.Chain.Worker do
   end
 
   def handle_call(:get_state, _from, state) do
-    {:reply, state, state}
+    last_block = state.blocks |> List.last()
+    state_only_last_block = %{state | blocks: last_block}
+    {:reply, state_only_last_block, state}
   end
 
   def handle_call({:add, block}, _from, state) do
@@ -58,7 +61,7 @@ defmodule Blockchain.Chain.Worker do
   end
 
   def merkle_tree_hash(txs) do
-    if Enum.empty?(txs) == nil do
+    if Enum.empty?(txs) == true do
       <<0::256>>
     else
       tree =
