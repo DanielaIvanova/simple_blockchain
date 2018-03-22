@@ -4,6 +4,7 @@ defmodule Blockchain.Chain.Worker do
   """
   alias Blockchain.Structures.Block
   alias Blockchain.Chain.ChainState
+  alias Blockchain.Utilities.Serialization
 
   use GenServer
 
@@ -34,7 +35,7 @@ defmodule Blockchain.Chain.Worker do
   def init(:ok) do
     blocks_list = [Block.genesis_block()]
     chain_state = %{}
-    {:ok, %{blocks: blocks_list, chain_state: chain_state}}
+    {:ok, %{blocks: blocks_list, accounts: chain_state}}
   end
 
   def handle_call(:get_state, _from, state) do
@@ -45,9 +46,9 @@ defmodule Blockchain.Chain.Worker do
 
   def handle_call({:add, block}, _from, state) do
     new_block_state = ChainState.get_block_state(block.txs)
-    new_chain_state = ChainState.get_chain_state(new_block_state, state.chain_state)
+    new_accounts = ChainState.get_chain_state(new_block_state, state.accounts)
     new_block_list = state.blocks ++ [block]
-    {:reply, :ok, %{state | blocks: new_block_list, chain_state: new_chain_state}}
+    {:reply, :ok, %{state | blocks: new_block_list, accounts: new_accounts}}
   end
 
   def handle_call(:last, _from, state) do
@@ -56,25 +57,35 @@ defmodule Blockchain.Chain.Worker do
   end
 
   def handle_call({:get_balance, pub_key}, _from, state) do
-    balance = state.chain_state[pub_key]
+    balance = state.accounts[pub_key]
     {:reply, balance, state}
   end
 
   def merkle_tree_hash(txs) do
-    if Enum.empty?(txs) == true do
-      <<0::256>>
-    else
-      tree =
-        for tx <- txs do
-          tx_bin = :erlang.term_to_binary(tx)
-          {:crypto.hash(:sha256, tx_bin), tx_bin}
-        end
+    case txs do
+      [] ->
+        <<0::256>>
 
-      tree
-      |> List.foldl(:gb_merkle_trees.empty(), fn node, tree ->
-        :gb_merkle_trees.enter(elem(node, 0), elem(node, 1), tree)
-      end)
+      _ ->
+        hash_txs_list =
+          for tx <- txs do
+            {Serialization.hash(Serialization.tx_to_binary(tx)), Serialization.tx_to_binary(tx)}
+          end
+
+        hash_txs_list
+        |> List.foldl(:gb_merkle_trees.empty(), fn k, v ->
+          :gb_merkle_trees.enter(elem(k, 0), elem(k, 1), v)
+        end)
+        |> :gb_merkle_trees.root_hash()
     end
-    |> :gb_merkle_trees.root_hash()
+  end
+
+  def chain_state_root_hash(chain_state) do
+    hash_accounts_list =
+      for {k, v} <- chain_state.accounts do
+        {k, Serialization.tx_to_binary(v)}
+      end
+
+    merkle_tree_hash(hash_accounts_list)
   end
 end

@@ -1,10 +1,10 @@
 # Simple Blockchain
 
-The application is simple implementation of blockchain. There're functionality for creating transactions, putting them to the pool of transaction, verifying, mining the new block and adding to the chain of blocks.
+This application is a simple blockchain implementation. There is functionality for creating transactions, putting them in the transactions pool, verifying them, mining the new block and adding to the block chain.
 
 ## Setup
 
-You need to have Elixir 1.6 and Erlang/OTP 20. Detailed installation instructions can be found at [http://elixir-lang.org/install.html](http://elixir-lang.org/install.html).
+You need to have Elixir 1.6 and Erlang/OTP 20. Detailed installation instructions can be found at: [http://elixir-lang.org/install.html](http://elixir-lang.org/install.html).
 
 ## How to use Simple Blockchain
 
@@ -39,7 +39,8 @@ There is information about last block in the chain and accounts with their token
 
 ### Example
 
-You have to start the miner first for 10-15 seconds:
+To interact with blockchain first of all you should have some tokens. 
+To generate them you have to start miner for at least 10 seconds.
 
 `Blockchain.Miner.Worker.start()`
 
@@ -47,46 +48,62 @@ Stop the miner:
 
 `Blockchain.Miner.Worker.stop()`
 
-You can chack your balanace in the chanstate:
+You can chack your balance in the chanstate:
 
 `Blockchain.Chain.Worker.get_state`
 
-Create a transaction:
-- Create private and public key
+To create a transaction you should have private and public key.
+- Create private and public key:
+
 
 `private_key_miner = Blockchain.Keys.Mock.private_key_miner()`
 
+
 `pub_key_miner = Blockchain.Keys.Mock.pub_key_miner()`
+
 
 `private_key_1 = Blockchain.Keys.Mock.private_key_1()`
 
+
 `pub_key_1 = Blockchain.Keys.Mock.pub_key_1()`
 
-- Build the transaction
+
+- Then, build the transaction:
 
 `alias Blockchain.Structures.Transaction`
 
+
 `alias Blockchain.Structures.SignedTx`
+
 
 `alias Blockchain.Pool.Worker, as: Pool`
 
+
 `data = %Transaction{from_acc: pub_key_miner, to_acc: pub_key_1, amount: 100}`
+
 
 `tx = SignedTx.sign_tx(data, private_key_miner)`
 
-- Add the transaction to the pool
+
+- Next, add the transaction to the pool: 
+
 
 `Blockchain.Pool.Worker.add_tx(tx)`
 
-- Check what is in the pool
+- To check what is in the pool:
+
 
 `Blockchain.Pool.Worker.check_pool()`
 
-- Mine one block
+- To mine one block
+
 
 `Blockchain.Miner.Worker.mine_one_block`
 
-- Check the state
+If you have enough money the transaction will appear in the new block.
+Otherwise the transaction will stay in the pool.
+
+- Check the state to see if yout transaction is in the new block. 
 
 `Blockchain.Chain.Worker.get_state`
 

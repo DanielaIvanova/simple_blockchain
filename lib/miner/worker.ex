@@ -78,13 +78,18 @@ defmodule Blockchain.Miner.Worker do
   end
 
   def candidate_block() do
+    chain_state = Chain.get_state()
     candidate_txs_list = Pool.take_and_remove_all_tx()
 
     valid_txs_list =
       Enum.reduce(candidate_txs_list, [], fn x, acc ->
         case Tx.verify(x) do
-          true -> acc ++ [x]
-          false -> acc
+          true ->
+            acc ++ [x]
+
+          false ->
+            Pool.add_tx(x)
+            acc
         end
       end)
 
@@ -99,12 +104,14 @@ defmodule Blockchain.Miner.Worker do
 
     previous_block_hash = Chain.last_block() |> Serialization.hash()
     difficulty_target = 2
+    chain_state_root_hash = Chain.chain_state_root_hash(chain_state)
     txs_root_hash = merkle_tree_hash
     nonce = 1
 
     candidate_header = %Header{
       previous_hash: previous_block_hash,
       difficulty_target: difficulty_target,
+      chain_state_root_hash: chain_state_root_hash,
       txs_root_hash: txs_root_hash,
       nonce: nonce
     }
