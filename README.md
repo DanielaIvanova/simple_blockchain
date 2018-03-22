@@ -79,7 +79,7 @@ To create a transaction you should have private and public key.
 `alias Blockchain.Pool.Worker, as: Pool`
 
 
-`data = %Transaction{from_acc: pub_key_miner, to_acc: pub_key_1, amount: 100}`
+`data = Transaction.create(pub_key_miner, pub_key_1, 100)`
 
 
 `tx = SignedTx.sign_tx(data, private_key_miner)`
