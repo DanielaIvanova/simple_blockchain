@@ -1,6 +1,6 @@
 # Simple Blockchain
 
-This application is a simple blockchain implementation. There is functionality for creating transactions, putting them in the transactions pool, verifying them, mining the new block and adding to the block chain.
+This application is a simple blockchain implementation. There is functionality for creating transactions, putting them in the transactions pool, verifying, mining the new block and adding to the blockchain.
 
 ## Setup
 

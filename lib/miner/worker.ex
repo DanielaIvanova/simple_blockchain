@@ -77,44 +77,26 @@ defmodule Blockchain.Miner.Worker do
     {:reply, state, state}
   end
 
+  @spec candidate_block() :: Block.t()
   def candidate_block() do
     chain_state = Chain.get_state()
-    candidate_txs_list = Pool.take_and_remove_all_tx()
-
-    valid_txs_list =
-      Enum.reduce(candidate_txs_list, [], fn x, acc ->
-        case Tx.verify(x) do
-          true ->
-            acc ++ [x]
-
-          false ->
-            Pool.add_tx(x)
-            acc
-        end
-      end)
-
-    txs =
-      if valid_txs_list == [] do
-        [Mock.pub_key_miner() |> SignedTx.coinbase_tx()]
-      else
-        valid_txs_list
-      end
-
+    txs = filter_txs()
     merkle_tree_hash = Chain.merkle_tree_hash(txs)
 
     previous_block_hash = Chain.last_block() |> Serialization.hash()
     difficulty_target = 2
     chain_state_root_hash = Chain.chain_state_root_hash(chain_state)
     txs_root_hash = merkle_tree_hash
-    nonce = 1
+    nonce = 0
 
-    candidate_header = %Header{
-      previous_hash: previous_block_hash,
-      difficulty_target: difficulty_target,
-      chain_state_root_hash: chain_state_root_hash,
-      txs_root_hash: txs_root_hash,
-      nonce: nonce
-    }
+    candidate_header =
+      Header.create(
+        previous_block_hash,
+        difficulty_target,
+        chain_state_root_hash,
+        txs_root_hash,
+        nonce
+      )
 
     header = proof(candidate_header)
     Block.create(header, txs)
@@ -137,5 +119,21 @@ defmodule Blockchain.Miner.Worker do
 
   defp schedule_work() do
     Process.send_after(self(), :work, 3000)
+  end
+
+  defp filter_txs() do
+    candidate_txs_list = Pool.take_and_remove_all_tx()
+    coinbase_tx = Mock.pub_key_miner() |> SignedTx.coinbase_tx()
+
+    Enum.reduce(candidate_txs_list, [coinbase_tx], fn x, acc ->
+      case Tx.verify(x) do
+        true ->
+          acc ++ [x]
+
+        false ->
+          Pool.add_tx(x)
+          acc
+      end
+    end)
   end
 end

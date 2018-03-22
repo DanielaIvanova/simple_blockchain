@@ -30,6 +30,14 @@ defmodule Blockchain.Chain.Worker do
     GenServer.call(__MODULE__, {:get_balance, pub_key})
   end
 
+  def clean() do
+    GenServer.call(__MODULE__, :clean)
+  end
+
+  def all_blocks() do
+    GenServer.call(__MODULE__, :all_blocks)
+  end
+
   # Server callbacks
 
   def init(:ok) do
@@ -59,6 +67,15 @@ defmodule Blockchain.Chain.Worker do
   def handle_call({:get_balance, pub_key}, _from, state) do
     balance = state.accounts[pub_key]
     {:reply, balance, state}
+  end
+
+  def handle_call(:clean, _from, _state) do
+    {:ok, new_state} = init(:ok)
+    {:reply, :ok, new_state}
+  end
+
+  def handle_call(:all_blocks, _from, state) do
+    {:reply, state.blocks, state}
   end
 
   def merkle_tree_hash(txs) do
