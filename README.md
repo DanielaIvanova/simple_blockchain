@@ -74,14 +74,12 @@ iex> Blockchain.Chain.Worker.get_state()
 To create a transaction you should have private and public key.
 - Create private and public key:
 
-
 ```
 iex> private_key_miner = Blockchain.Keys.Mock.private_key_miner()
 iex> pub_key_miner = Blockchain.Keys.Mock.pub_key_miner()
 iex> private_key_1 = Blockchain.Keys.Mock.private_key_1()
 iex> pub_key_1 = Blockchain.Keys.Mock.pub_key_1()
 ```
-
 
 - Then, build the transaction:
 
