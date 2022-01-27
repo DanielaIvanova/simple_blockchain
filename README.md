@@ -14,8 +14,7 @@ mix deps.get
 ```
 
 #### **Starting the application**
-Start the application in interactive Elixir mode
-
+Start the application in interactive Elixir mode:
 ```
 iex -S mix
 ```
